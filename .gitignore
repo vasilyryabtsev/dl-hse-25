@@ -175,4 +175,7 @@ cython_debug/
 data.txt.zip
 
 data/
+train/
+valid/
 *.zip
+data.yaml
