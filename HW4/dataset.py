@@ -1,13 +1,14 @@
 import os
 import torch
+import numpy as np
 from typing import Union, List, Tuple
 from sentencepiece import SentencePieceTrainer, SentencePieceProcessor
 from torch.utils.data import Dataset
 
+TRAIN_VAL_RANDOM_SEED = 42
+VAL_RATIO = 0.05
 
 class TextDataset(Dataset):
-    TRAIN_VAL_RANDOM_SEED = 42
-    VAL_RATIO = 0.05
 
     def __init__(self, data_file: str, train: bool = True, sp_model_prefix: str = None,
                  vocab_size: int = 2000, normalization_rule_name: str = 'nmt_nfkc_cf',
@@ -34,14 +35,23 @@ class TextDataset(Dataset):
 
         with open(data_file) as file:
             texts = file.readlines()
-
+        len_texts = len(texts)
         """
         YOUR CODE HERE (⊃｡•́‿•̀｡)⊃━✿✿✿✿✿✿
         Split texts to train and validation fixing self.TRAIN_VAL_RANDOM_SEED
         The validation ratio is self.VAL_RATIO
         """
-        train_texts, val_texts = None, None
-        self.texts = train_texts if train else val_texts
+        np.random.seed(TRAIN_VAL_RANDOM_SEED)
+        permutation = np.random.permutation(len_texts)
+        if train:
+            self.texts = np.array(texts)[
+                permutation[: int(len_texts * (1 - VAL_RATIO))]
+            ].tolist()
+        else:
+            self.texts = np.array(texts)[
+                permutation[int(len_texts * (1 - VAL_RATIO)) :]
+            ].tolist()
+            
         self.indices = self.sp_model.encode(self.texts)
 
         self.pad_id, self.unk_id, self.bos_id, self.eos_id = \
@@ -84,8 +94,8 @@ class TextDataset(Dataset):
         :return: encoded text indices and its actual length (including BOS and EOS specials)
         """
         # These are placeholders, you may remove them.
-        indices = torch.randint(high=self.vocab_size, size=(self.max_length, ))
-        length = torch.randint(low=1, high=self.max_length + 1, size=()).item()
+        # indices = torch.randint(high=self.vocab_size, size=(self.max_length, ))
+        # length = torch.randint(low=1, high=self.max_length + 1, size=()).item()
         """
         YOUR CODE HERE (⊃｡•́‿•̀｡)⊃━✿✿✿✿✿✿
         Take corresponding index array from self.indices,
@@ -93,4 +103,11 @@ class TextDataset(Dataset):
         pad to self.max_length using self.pad_id.
         Return padded indices of size (max_length, ) and its actual length
         """
-        return indices, length
+        encoded = self.indices[item]
+        if len(encoded) <= self.max_length - 2:
+            encoded += [self.unk_id] * (self.max_length - 2 - len(encoded)) + [self.eos_id]
+        else:
+            encoded = encoded[:self.max_length - 2] + [self.pad_id]
+        
+        encoded = [self.bos_id] + encoded
+        return torch.Tensor(encoded), len(encoded)
