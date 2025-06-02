@@ -6,6 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
+# Encoding
+*.model
+*.vocab
+
 # Distribution / packaging
 .Python
 build/
@@ -179,3 +183,4 @@ train/
 valid/
 *.zip
 data.yaml
+jokes.txt
