@@ -103,11 +103,13 @@ class TextDataset(Dataset):
         pad to self.max_length using self.pad_id.
         Return padded indices of size (max_length, ) and its actual length
         """
-        encoded = self.indices[item]
-        if len(encoded) <= self.max_length - 2:
-            encoded += [self.unk_id] * (self.max_length - 2 - len(encoded)) + [self.eos_id]
+        indices_item = self.indices[item]
+        encoded = [self.bos_id]
+        if len(indices_item) > self.max_length - 2:
+            encoded += indices_item[:self.max_length - 1]
+            length = self.max_length - 1
         else:
-            encoded = encoded[:self.max_length - 2] + [self.pad_id]
-        
-        encoded = [self.bos_id] + encoded
-        return torch.Tensor(encoded), len(encoded)
+            encoded += indices_item + [self.eos_id] + \
+                       [self.pad_id] * (self.max_length - len(indices_item) - 2)
+            length = 2 + len(indices_item)
+        return torch.Tensor(encoded), length
