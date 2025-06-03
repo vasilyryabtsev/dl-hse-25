@@ -29,7 +29,7 @@ def plot_losses(train_losses: List[float], val_losses: List[float]):
     YOUR CODE HERE (⊃｡•́‿•̀｡)⊃━✿✿✿✿✿✿
     Calculate train and validation perplexities given lists of losses
     """
-    train_perplexities, val_perplexities = [], []
+    train_perplexities, val_perplexities = [torch.exp(L) for L in train_losses], [torch.exp(L) for L in val_losses]
 
     axs[1].plot(range(1, len(train_perplexities) + 1), train_perplexities, label='train')
     axs[1].plot(range(1, len(val_perplexities) + 1), val_perplexities, label='val')
@@ -64,6 +64,12 @@ def training_epoch(model: LanguageModel, optimizer: torch.optim.Optimizer, crite
         call backward and make one optimizer step.
         Accumulate sum of losses for different batches in train_loss
         """
+        indices, lengths = indices.to(device), lengths.to(device)
+        max_length = lengths.max()
+        trimmed_indices = indices[:, :max_length]
+        x = trimmed_indices[:, :-1]
+        y = trimmed_indices[:, 1:]
+        logits = model(x, lengths - 1).to(device)
 
     train_loss /= len(loader.dataset)
     return train_loss
