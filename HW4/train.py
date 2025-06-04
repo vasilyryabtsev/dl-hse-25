@@ -20,7 +20,7 @@ def plot_losses(train_losses: List[float], val_losses: List[float]):
     :param train_losses: list of train losses at each epoch
     :param val_losses: list of validation losses at each epoch
     """
-    clear_output()
+    clear_output()  
     fig, axs = plt.subplots(1, 2, figsize=(13, 4))
     axs[0].plot(range(1, len(train_losses) + 1), train_losses, label='train')
     axs[0].plot(range(1, len(val_losses) + 1), val_losses, label='val')
@@ -85,7 +85,7 @@ def training_epoch(model: LanguageModel, optimizer: torch.optim.Optimizer, crite
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
-        train_loss += loss.detach().item()
+        train_loss += loss.detach().item() * indices.shape[0]
 
     train_loss /= len(loader.dataset)
     return train_loss
@@ -117,7 +117,7 @@ def validation_epoch(model: LanguageModel, criterion: nn.Module,
             x, y = get_xy(indices, lengths)
             logits = model(x, lengths - 1)
             loss = calc_loss(logits, y, criterion)
-            val_loss += loss.detach().item()
+            val_loss += loss.detach().item() * indices.shape[0]
 
     val_loss /= len(loader.dataset)
     return val_loss
