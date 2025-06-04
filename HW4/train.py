@@ -1,5 +1,6 @@
 import torch
 import seaborn as sns
+import numpy as np
 import matplotlib.pyplot as plt
 from typing import List, Optional, Any
 from torch import nn
@@ -29,7 +30,7 @@ def plot_losses(train_losses: List[float], val_losses: List[float]):
     YOUR CODE HERE (⊃｡•́‿•̀｡)⊃━✿✿✿✿✿✿
     Calculate train and validation perplexities given lists of losses
     """
-    train_perplexities, val_perplexities = [torch.exp(L) for L in train_losses], [torch.exp(L) for L in val_losses]
+    train_perplexities, val_perplexities = [np.exp(L) for L in train_losses], [np.exp(L) for L in val_losses]
 
     axs[1].plot(range(1, len(train_perplexities) + 1), train_perplexities, label='train')
     axs[1].plot(range(1, len(val_perplexities) + 1), val_perplexities, label='val')
@@ -50,8 +51,8 @@ def get_xy(indices, lengths):
 
 def calc_loss(logits, y, criterion):
     B, T, F = logits.shape
-    logits = logits.view(B * T, F)
-    target = y.view(B * T)
+    logits = logits.reshape(B * T, F)
+    target = y.reshape(B * T) 
     loss = criterion(logits, target)
     return loss
 
@@ -77,9 +78,9 @@ def training_epoch(model: LanguageModel, optimizer: torch.optim.Optimizer, crite
         call backward and make one optimizer step.
         Accumulate sum of losses for different batches in train_loss
         """
-        indices, lengths = indices.long().to(device), lengths.to(device)
+        indices, lengths = indices.long().to(device), lengths
         x, y = get_xy(indices, lengths)
-        logits = model(x, lengths - 1).to(device)
+        logits = model(x, lengths - 1)
         loss = calc_loss(logits, y, criterion)
         loss.backward()
         optimizer.step()
@@ -112,11 +113,11 @@ def validation_epoch(model: LanguageModel, criterion: nn.Module,
         Accumulate sum of losses for different batches in val_loss
         """
         with torch.no_grad():
-            indices, lengths = indices.long().to(device), lengths.to(device)
+            indices, lengths = indices.long().to(device), lengths
             x, y = get_xy(indices, lengths)
-            logits = model(x, lengths - 1).to(device)
+            logits = model(x, lengths - 1)
             loss = calc_loss(logits, y, criterion)
-            val_loss += loss.detach().cpu().item()
+            val_loss += loss.detach().item()
 
     val_loss /= len(loader.dataset)
     return val_loss

@@ -76,6 +76,7 @@ class LanguageModel(nn.Module):
         until EOS token or reaching self.max_length.
         Do not forget to divide predicted logits by temperature before sampling
         """
+        device = next(self.parameters()).device
         prefix_index = self.dataset.text2ids(prefix)
         if isinstance(prefix_index, str):
             prefix_index = [prefix_index]
@@ -83,7 +84,7 @@ class LanguageModel(nn.Module):
         generated = [prefix]
         h = None
         for index in indices:
-            index_tensor = torch.tensor([index], dtype=torch.long)
+            index_tensor = torch.tensor([index], dtype=torch.long).to(device)
             x = self.embedding(index_tensor)
             if h is None:
                 out, h = self.rnn(x)
