@@ -41,6 +41,19 @@ def plot_losses(train_losses: List[float], val_losses: List[float]):
 
     plt.show()
 
+def get_xy(indices, lengths):
+    max_length = lengths.max()
+    trimmed_indices = indices[:, :max_length]
+    x = trimmed_indices[:, :-1]
+    y = trimmed_indices[:, 1:]
+    return x, y
+
+def calc_loss(logits, y, criterion):
+    B, T, F = logits.shape
+    logits = logits.view(B * T, F)
+    target = y.view(B * T)
+    loss = criterion(logits, target)
+    return loss
 
 def training_epoch(model: LanguageModel, optimizer: torch.optim.Optimizer, criterion: nn.Module,
                    loader: DataLoader, tqdm_desc: str):
@@ -64,12 +77,14 @@ def training_epoch(model: LanguageModel, optimizer: torch.optim.Optimizer, crite
         call backward and make one optimizer step.
         Accumulate sum of losses for different batches in train_loss
         """
-        indices, lengths = indices.to(device), lengths.to(device)
-        max_length = lengths.max()
-        trimmed_indices = indices[:, :max_length]
-        x = trimmed_indices[:, :-1]
-        y = trimmed_indices[:, 1:]
+        indices, lengths = indices.long().to(device), lengths.long().to(device)
+        x, y = get_xy(indices, lengths)
         logits = model(x, lengths - 1).to(device)
+        loss = calc_loss(logits, y, criterion)
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+        train_loss += loss.detach().item()
 
     train_loss /= len(loader.dataset)
     return train_loss
@@ -96,6 +111,12 @@ def validation_epoch(model: LanguageModel, criterion: nn.Module,
         Process one validation step: calculate loss.
         Accumulate sum of losses for different batches in val_loss
         """
+        with torch.no_grad():
+            indices, lengths = indices.long().to(device), lengths.long().to(device)
+            x, y = get_xy(indices, lengths)
+            logits = model(x, lengths - 1).to(device)
+            loss = calc_loss(logits, y, criterion)
+            val_loss += loss.detach().cpu().item()
 
     val_loss /= len(loader.dataset)
     return val_loss
