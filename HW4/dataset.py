@@ -29,7 +29,7 @@ class TextDataset(Dataset):
                 input=data_file, vocab_size=vocab_size,
                 model_type=model_type, model_prefix=sp_model_prefix,
                 normalization_rule_name=normalization_rule_name,
-                padding_id=0, unk_id=1, bos_id=2, eos_id=3,
+                pad_id=0, unk_id=1, bos_id=2, eos_id=3
             )
         # load tokenizer from file
         self.sp_model = SentencePieceProcessor(model_file=sp_model_prefix + '.model')
