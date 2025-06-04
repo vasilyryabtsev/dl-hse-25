@@ -113,4 +113,4 @@ class TextDataset(Dataset):
             encoded += indices_item + [self.eos_id] + \
                        [self.pad_id] * (self.max_length - len(indices_item) - 2)
             length = 2 + len(indices_item)
-        return torch.Tensor(encoded), length
+        return torch.tensor(encoded, dtype=torch.long), length

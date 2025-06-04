@@ -77,7 +77,7 @@ def training_epoch(model: LanguageModel, optimizer: torch.optim.Optimizer, crite
         call backward and make one optimizer step.
         Accumulate sum of losses for different batches in train_loss
         """
-        indices, lengths = indices.long().to(device), lengths.long().to(device)
+        indices, lengths = indices.to(device), lengths.to(device)
         x, y = get_xy(indices, lengths)
         logits = model(x, lengths - 1).to(device)
         loss = calc_loss(logits, y, criterion)
