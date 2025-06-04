@@ -85,7 +85,7 @@ def training_epoch(model: LanguageModel, optimizer: torch.optim.Optimizer, crite
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
-        train_loss += loss.detach().item() * indices.shape[0]
+        train_loss += loss.detach().item() * y.shape[0]
 
     train_loss /= len(loader.dataset)
     return train_loss
@@ -117,7 +117,7 @@ def validation_epoch(model: LanguageModel, criterion: nn.Module,
             x, y = get_xy(indices, lengths)
             logits = model(x, lengths - 1)
             loss = calc_loss(logits, y, criterion)
-            val_loss += loss.detach().item() * indices.shape[0]
+            val_loss += loss.detach().item() * y.shape[0]
 
     val_loss /= len(loader.dataset)
     return val_loss
