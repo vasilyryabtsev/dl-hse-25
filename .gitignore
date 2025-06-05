@@ -184,3 +184,4 @@ valid/
 *.zip
 data.yaml
 jokes.txt
+*.pth
