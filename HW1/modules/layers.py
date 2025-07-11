@@ -123,7 +123,7 @@ class BatchNormalization(Module):
         if self.training:
             B = input.shape[0]
             self.mean = input.sum(axis=0) / B
-            self.var = np.pow((input - self.mean), 2).sum(axis=0) / B
+            self.var = np.power((input - self.mean), 2).sum(axis=0) / B
             self.norm_input = (input - self.mean) / np.sqrt((self.var + self.eps))
             # update params
             self.running_mean = (1 - self.momentum) * self.running_mean + self.momentum * self.mean
