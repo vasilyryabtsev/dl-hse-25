@@ -158,11 +158,12 @@ class BatchNormalization(Module):
                 + dGdVar * (-2 * self.input_mean).sum(axis=0) / m  # (num_features,)
             dGdInput = dGdX * self.inv_sqrt_var + dGdVar * 2 * self.input_mean / m \
                 + dGdMean / m  # (batch_size, num_features) 
-            return dGdInput
         else:
-            dGdInput = grad_output * self.weight * self.inv_sqrt_var if self.affine \
-                else grad_output * self.inv_sqrt_var
-            return dGdInput
+            if self.affine:
+                dGdInput = grad_output * self.weight * self.inv_sqrt_var
+            else:
+                dGdInput = grad_output * self.inv_sqrt_var
+        return dGdInput
         
     def update_grad_parameters(self, input: np.ndarray, grad_output: np.ndarray):
         """
