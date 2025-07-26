@@ -133,15 +133,12 @@ class BatchNormalization(Module):
                 + self.momentum * self.mean
             self.running_var = (1 - self.momentum) * self.running_var \
                 + self.momentum * B / (B - 1) * self.var
-            if self.affine:
-                return self.norm_input * self.weight + self.bias
-            return self.norm_input
         else:
             self.inv_sqrt_var = 1 / np.sqrt(self.running_var + self.eps)
             self.norm_input = (input - self.running_mean) * self.inv_sqrt_var
-            if self.affine:
-                return self.norm_input * self.weight + self.bias
-            return self.norm_input
+        if self.affine:
+            return self.norm_input * self.weight + self.bias
+        return self.norm_input
 
     def compute_grad_input(self, input: np.ndarray, grad_output: np.ndarray) -> np.ndarray:
         """
