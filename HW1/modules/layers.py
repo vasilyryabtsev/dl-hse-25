@@ -134,10 +134,11 @@ class BatchNormalization(Module):
             self.running_var = (1 - self.momentum) * self.running_var \
                 + self.momentum * B / (B - 1) * self.var
             if self.affine:
-                self.norm_input = self.norm_input * self.weight + self.bias
+                return self.norm_input * self.weight + self.bias
             return self.norm_input
         else:
-            norm_input_eval = (input - self.running_mean) * self.inv_sqrt_var
+            inv_sqrt_running_var = 1 / np.sqrt(self.running_var + self.eps)
+            norm_input_eval = (input - self.running_mean) * inv_sqrt_running_var
             if self.affine:
                 norm_input_eval = norm_input_eval * self.weight + self.bias
             return norm_input_eval
@@ -153,6 +154,7 @@ class BatchNormalization(Module):
         m = input.shape[0] # batch_size
         dGdX = grad_output * self.weight if self.affine \
             else grad_output # (batch_size, num_features)
+        print(f"{dGdX is None}, {self.input_mean is None}, {self.var is None}")
         dGdVar = (dGdX * self.input_mean * (-0.5) \
             * np.power(self.var + self.eps, -1.5)).sum(axis=0) # (num_features,)
         dGdMean = (dGdX * (-self.inv_sqrt_var)).sum(axis=0) \
