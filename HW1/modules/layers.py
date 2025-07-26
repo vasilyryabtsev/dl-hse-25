@@ -137,11 +137,11 @@ class BatchNormalization(Module):
                 return self.norm_input * self.weight + self.bias
             return self.norm_input
         else:
-            inv_sqrt_running_var = 1 / np.sqrt(self.running_var + self.eps)
-            norm_input_eval = (input - self.running_mean) * inv_sqrt_running_var
+            self.inv_sqrt_var = 1 / np.sqrt(self.running_var + self.eps)
+            self.norm_input = (input - self.running_mean) * self.inv_sqrt_var
             if self.affine:
-                norm_input_eval = norm_input_eval * self.weight + self.bias
-            return norm_input_eval
+                return self.norm_input * self.weight + self.bias
+            return self.norm_input
 
     def compute_grad_input(self, input: np.ndarray, grad_output: np.ndarray) -> np.ndarray:
         """
@@ -151,18 +151,22 @@ class BatchNormalization(Module):
         """
         # replace with your code ｀、ヽ｀、ヽ(ノ＞＜)ノ ヽ｀☂｀、ヽ
         # return super().compute_grad_input(input, grad_output)
-        m = input.shape[0] # batch_size
-        dGdX = grad_output * self.weight if self.affine \
-            else grad_output # (batch_size, num_features)
-        print(f"{dGdX is None}, {self.input_mean is None}, {self.var is None}")
-        dGdVar = (dGdX * self.input_mean * (-0.5) \
-            * np.power(self.var + self.eps, -1.5)).sum(axis=0) # (num_features,)
-        dGdMean = (dGdX * (-self.inv_sqrt_var)).sum(axis=0) \
-            + dGdVar * (-2 * self.input_mean).sum(axis=0) / m  # (num_features,)
-        dGdInput = dGdX * self.inv_sqrt_var + dGdVar * 2 * self.input_mean / m \
-            + dGdMean / m  # (batch_size, num_features) 
-        return dGdInput
-
+        if self.training:
+            m = input.shape[0] # batch_size
+            dGdX = grad_output * self.weight if self.affine \
+                else grad_output # (batch_size, num_features)
+            dGdVar = (dGdX * self.input_mean * (-0.5) \
+                * np.power(self.var + self.eps, -1.5)).sum(axis=0) # (num_features,)
+            dGdMean = (dGdX * (-self.inv_sqrt_var)).sum(axis=0) \
+                + dGdVar * (-2 * self.input_mean).sum(axis=0) / m  # (num_features,)
+            dGdInput = dGdX * self.inv_sqrt_var + dGdVar * 2 * self.input_mean / m \
+                + dGdMean / m  # (batch_size, num_features) 
+            return dGdInput
+        else:
+            dGdInput = grad_output * self.weight * self.inv_sqrt_var if self.affine \
+                else grad_output * self.inv_sqrt_var
+            return dGdInput
+        
     def update_grad_parameters(self, input: np.ndarray, grad_output: np.ndarray):
         """
         :param input: array of shape (batch_size, num_features)
