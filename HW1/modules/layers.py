@@ -208,7 +208,11 @@ class Dropout(Module):
         :return: array of the same size
         """
         # replace with your code ｀、ヽ｀、ヽ(ノ＞＜)ノ ヽ｀☂｀、ヽ
-        return super().compute_output(input)
+        # return super().compute_output(input)
+        if self.training:
+            self.mask = np.random.binomial(n=1, p=1-self.p, size=input.shape)
+            return input * self.mask / (1 - self.p)
+        return input
 
     def compute_grad_input(self, input: np.ndarray, grad_output: np.ndarray) -> np.ndarray:
         """
@@ -217,7 +221,10 @@ class Dropout(Module):
         :return: array of the same size
         """
         # replace with your code ｀、ヽ｀、ヽ(ノ＞＜)ノ ヽ｀☂｀、ヽ
-        return super().compute_grad_input(input, grad_output)
+        # return super().compute_grad_input(input, grad_output)
+        if self.training:
+            return grad_output * self.mask / (1 - self.p)
+        return grad_output
 
     def __repr__(self) -> str:
         return f'Dropout(p={self.p})'
