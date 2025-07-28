@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.special as ss
 from .base import Module
 
 
@@ -12,7 +13,8 @@ class ReLU(Module):
         :return: array of the same size
         """
         # replace with your code ｀、ヽ｀、ヽ(ノ＞＜)ノ ヽ｀☂｀、ヽ
-        return super().compute_output(input)
+        # return super().compute_output(input)
+        return np.maximum(0, input)
 
     def compute_grad_input(self, input: np.ndarray, grad_output: np.ndarray) -> np.ndarray:
         """
@@ -21,7 +23,9 @@ class ReLU(Module):
         :return: array of the same size
         """
         # replace with your code ｀、ヽ｀、ヽ(ノ＞＜)ノ ヽ｀☂｀、ヽ
-        return super().compute_grad_input(input, grad_output)
+        # return super().compute_grad_input(input, grad_output)
+        mask = input > 0
+        return grad_output * mask
 
 
 class Sigmoid(Module):
@@ -34,7 +38,8 @@ class Sigmoid(Module):
         :return: array of the same size
         """
         # replace with your code ｀、ヽ｀、ヽ(ノ＞＜)ノ ヽ｀☂｀、ヽ
-        return super().compute_output(input)
+        # return super().compute_output(input)
+        return ss.expit(input)
 
     def compute_grad_input(self, input: np.ndarray, grad_output: np.ndarray) -> np.ndarray:
         """
@@ -43,7 +48,8 @@ class Sigmoid(Module):
         :return: array of the same size
         """
         # replace with your code ｀、ヽ｀、ヽ(ノ＞＜)ノ ヽ｀☂｀、ヽ
-        return super().compute_grad_input(input, grad_output)
+        # return super().compute_grad_input(input, grad_output)
+        return grad_output * self.compute_output(input) * (1 - self.compute_output(input))
 
 
 class Softmax(Module):
@@ -56,7 +62,8 @@ class Softmax(Module):
         :return: array of the same size
         """
         # replace with your code ｀、ヽ｀、ヽ(ノ＞＜)ノ ヽ｀☂｀、ヽ
-        return super().compute_output(input)
+        # return super().compute_output(input)
+        return ss.softmax(input, axis=-1)
 
     def compute_grad_input(self, input: np.ndarray, grad_output: np.ndarray) -> np.ndarray:
         """
@@ -65,8 +72,10 @@ class Softmax(Module):
         :return: array of the same size
         """
         # replace with your code ｀、ヽ｀、ヽ(ノ＞＜)ノ ヽ｀☂｀、ヽ
-        return super().compute_grad_input(input, grad_output)
-
+        # return super().compute_grad_input(input, grad_output)
+        sm = ss.softmax(input, axis=-1)
+        dGdX = np.diag(np.diag(sm)) - sm @ sm.T
+        return dGdX @ grad_output
 
 class LogSoftmax(Module):
     """
