@@ -63,7 +63,7 @@ class Softmax(Module):
         """
         # replace with your code ｀、ヽ｀、ヽ(ノ＞＜)ノ ヽ｀☂｀、ヽ
         # return super().compute_output(input)
-        return ss.softmax(input, axis=-1)
+        return ss.softmax(input, axis=1)
 
     def compute_grad_input(self, input: np.ndarray, grad_output: np.ndarray) -> np.ndarray:
         """
@@ -73,9 +73,10 @@ class Softmax(Module):
         """
         # replace with your code ｀、ヽ｀、ヽ(ノ＞＜)ノ ヽ｀☂｀、ヽ
         # return super().compute_grad_input(input, grad_output)
-        sm = ss.softmax(input, axis=-1)
-        dGdX = np.diag(np.diag(sm)) - sm @ sm.T
-        return dGdX @ grad_output
+        S = ss.softmax(input, axis=1) # (batch_size, num_classes)
+        E = np.ones(S.shape[1]).reshape((-1, 1)) # (num_classes, 1)
+        alpha = (grad_output * S) @ E # (batch_size, 1)
+        return (grad_output - alpha @ E.T) * S # (batch_size, num_classes)
 
 class LogSoftmax(Module):
     """
