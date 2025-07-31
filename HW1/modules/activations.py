@@ -88,7 +88,8 @@ class LogSoftmax(Module):
         :return: array of the same size
         """
         # replace with your code ｀、ヽ｀、ヽ(ノ＞＜)ノ ヽ｀☂｀、ヽ
-        return super().compute_output(input)
+        # return super().compute_output(input)
+        return input - np.log(np.sum(np.exp(input), axis=1, keepdims=True))
 
     def compute_grad_input(self, input: np.ndarray, grad_output: np.ndarray) -> np.ndarray:
         """
@@ -97,4 +98,6 @@ class LogSoftmax(Module):
         :return: array of the same size
         """
         # replace with your code ｀、ヽ｀、ヽ(ノ＞＜)ノ ヽ｀☂｀、ヽ
-        return super().compute_grad_input(input, grad_output)
+        # return super().compute_grad_input(input, grad_output)
+        softmax = ss.softmax(input, axis=1)
+        return grad_output - softmax * np.sum(grad_output, axis=1, keepdims=True)
