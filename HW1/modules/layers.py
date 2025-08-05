@@ -237,6 +237,7 @@ class Sequential(Module):
     def __init__(self, *args):
         super().__init__()
         self.modules = list(args)
+        self.input_dict = {}
 
     def compute_output(self, input: np.ndarray) -> np.ndarray:
         """
@@ -244,7 +245,12 @@ class Sequential(Module):
         :return: array of size matching the output size of the last layer
         """
         # replace with your code ｀、ヽ｀、ヽ(ノ＞＜)ノ ヽ｀☂｀、ヽ
-        return super().compute_output(input)
+        # return super().compute_output(input)
+        output = input
+        for module in self.modules:
+            self.input_dict[module] = output
+            output = module.compute_output(output)
+        return output
 
     def compute_grad_input(self, input: np.ndarray, grad_output: np.ndarray) -> np.ndarray:
         """
@@ -252,8 +258,12 @@ class Sequential(Module):
         :param grad_output: array of size matching the output size of the last layer
         :return: array of size matching the input size of the first layer
         """
-        # replace with your code ｀、ヽ｀、ヽ(ノ＞＜)ノ ヽ｀☂｀、ヽ
-        return super().compute_grad_input(input, grad_output)
+        # Call update_grad_parameters for each module during backward pass
+        for module in reversed(self.modules):
+            grad_output_old = grad_output
+            grad_output = module.compute_grad_input(self.input_dict[module], grad_output_old)
+            module.update_grad_parameters(self.input_dict[module], grad_output_old)
+        return grad_output
 
     def __getitem__(self, item):
         return self.modules[item]
