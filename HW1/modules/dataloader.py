@@ -1,3 +1,5 @@
+import numpy as np
+
 class DataLoader(object):
     """
     Tool for shuffling data and forming mini-batches
@@ -21,14 +23,14 @@ class DataLoader(object):
         :return: number of batches per epoch
         """
         # replace with your code ｀、ヽ｀、ヽ(ノ＞＜)ノ ヽ｀☂｀、ヽ
-        return 0
+        return self.X.shape[0] // self.batch_size + (self.X.shape[0] % self.batch_size > 0)
 
     def num_samples(self) -> int:
         """
         :return: number of data samples
         """
         # replace with your code ｀、ヽ｀、ヽ(ノ＞＜)ノ ヽ｀☂｀、ヽ
-        return 0
+        return len(self.X)
 
     def __iter__(self):
         """
@@ -36,6 +38,11 @@ class DataLoader(object):
         :return: self
         """
         # your code here ｀、ヽ｀、ヽ(ノ＞＜)ノ ヽ｀☂｀、ヽ
+        if self.shuffle:
+            indices = np.random.permutation(self.X.shape[0])
+            self.X = self.X[indices]
+            self.y = self.y[indices]
+        self.batch_id = 0
         return self
 
     def __next__(self):
@@ -44,4 +51,10 @@ class DataLoader(object):
         :return: (x_batch, y_batch)
         """
         # your code here ｀、ヽ｀、ヽ(ノ＞＜)ノ ヽ｀☂｀、ヽ
-        raise StopIteration
+        if self.batch_id >= len(self):
+            raise StopIteration
+        start = self.batch_id * self.batch_size
+        end = start + self.batch_size
+        self.batch_id += 1
+        return self.X[start:end], self.y[start:end]
+
